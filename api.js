@@ -1,4 +1,3 @@
-// api.js
 
 const headers = {
   AccountKey: "XXPgdr5QSdiFeDNhghGGrw==",  // 请替换为你的真实 Key
@@ -33,12 +32,17 @@ async function fetchAllData(baseUrl, maxSkipValue) {
   const results = [];
   for (let skip = 0; skip <= maxSkipValue; skip += 500) {
     const url = baseUrl + skip;
-    const res = await fetch(url, { headers });
-    const json = await res.json();
-    if (json.value && json.value.length > 0) {
-      results.push(...json.value);
-    } else {
-      break; // 无数据时提前结束
+    try {
+      const res = await fetch(url, { headers });
+      const json = await res.json();
+      if (json.value && json.value.length > 0) {
+        results.push(...json.value);
+      } else {
+        break;
+      }
+    } catch (e) {
+      console.error("请求失败：", e);
+      break;
     }
   }
   return results;
