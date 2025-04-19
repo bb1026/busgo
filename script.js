@@ -53,11 +53,9 @@ if (needsData.includes(iconClass) && missingData) {
     contentDiv.innerHTML = '显示我的收藏内容...';
   } else if (iconClass === 'fa-route') { // 巴士路线
     contentDiv.innerHTML = '显示巴士路线内容...';
-  } else if (iconClass === 'fa-subway') { // 地铁
+} else if (iconClass === 'fa-subway') {
   contentDiv.innerHTML = `
-    <div class="pdf-container">
-      <iframe src="https://bb1026.github.io/busgo/MRT_CH.pdf" frameborder="0"></iframe>
-    </div>
+    <iframe src="viewer.html" style="width:100%; height:600px; border:none;"></iframe>
   `;
 } else if (iconClass === 'fa-cogs') { // 设置
     getVersionNumber().then(version => {
