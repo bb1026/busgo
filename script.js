@@ -29,15 +29,15 @@ function selectNav(item) {
 
   // 若当前页面需要数据且缺失，则提示下载
   const needsData = ['fa-map-marker-alt', 'fa-route']; // 哪些页面需要用到数据
-  if (needsData.includes(iconClass) && missingData) {
-    if (confirm('当前无缓存数据，是否立即下载？')) {
-      updateData(); // 启动下载和进度条
-      return; // 暂时不切换页面，等待下载完成
-    } else {
-      contentDiv.innerHTML = '<p style="color: red;">无缓存数据，页面内容无法显示。</p>';
-      return;
-    }
+if (needsData.includes(iconClass) && missingData) {
+  if (confirm('当前无缓存数据，是否现在下载？')) {
+    updateData(() => selectNav(item)); // 下载完成后重新点击
+    return;
+  } else {
+    contentDiv.innerHTML = '<p style="color: red;">无缓存数据，页面内容无法显示。</p>';
+    return;
   }
+}
 
   // 页面逻辑根据导航图标处理
   if (iconClass === 'fa-map-marker-alt') { // 附近站点
@@ -54,8 +54,12 @@ function selectNav(item) {
   } else if (iconClass === 'fa-route') { // 巴士路线
     contentDiv.innerHTML = '显示巴士路线内容...';
   } else if (iconClass === 'fa-subway') { // 地铁
-    contentDiv.innerHTML = '显示地铁信息...开发中!!!';
-  } else if (iconClass === 'fa-cogs') { // 设置
+  contentDiv.innerHTML = `
+    <div class="pdf-container">
+      <iframe src="https://bb1026.github.io/busgo/MRT_CH.pdf" frameborder="0"></iframe>
+    </div>
+  `;
+} else if (iconClass === 'fa-cogs') { // 设置
     getVersionNumber().then(version => {
       const lastUpdate = localStorage.getItem('dataUpdateTime') || '暂无记录';
       const refreshInterval = localStorage.getItem('refreshInterval') || '15';
@@ -102,15 +106,26 @@ async function fetchAndCacheAll() {
   hideOverlay();
 }
 
-async function updateData() {
-  if (!confirm('是否确认更新所有缓存数据？这可能需要几秒钟时间。')) return;
+async function updateData(onComplete) {
+  const datasets = Object.keys(apiUrls);
+  showOverlay();
 
-  try {
-    await fetchAndCacheAll();
-    alert('数据已成功更新！');
-  } catch (e) {
-    alert('更新失败: ' + e);
+  for (let i = 0; i < datasets.length; i++) {
+    const name = datasets[i];
+    const data = await fetchAllData(apiUrls[name], maxSkip[name]);
+    localStorage.setItem(name, JSON.stringify(data));
+    setProgress(Math.round(((i + 1) / datasets.length) * 100));
   }
+
+  const now = new Date().toLocaleString();
+  localStorage.setItem('dataUpdateTime', now);
+  const updateEl = document.getElementById('update-time');
+  if (updateEl) updateEl.innerText = now;
+
+  hideOverlay();
+  alert("数据更新完成！");
+
+  if (typeof onComplete === 'function') onComplete(); // 回调
 }
 
 function getLocation() {
